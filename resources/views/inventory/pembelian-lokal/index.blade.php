@@ -1,0 +1,118 @@
+<x-app-layout :pageTitle="'Inventory - Pembelian Lokal'">
+    <div class="card border">
+        <div class="card-header">
+            <h6 class="card-title">
+                Pembelian Lokal
+            </h6>
+        </div>
+        <div class="card-body">
+            @if (Auth::user()->role === 'Gudang Site')
+                <a href="{{ route('pembelian-lokal.create') }}" class="btn btn-primary">
+                    <i class="ti ti-plus"></i>
+                    &nbsp;
+                    Tambah Data
+                </a>
+            @endif
+
+            <div class="overflow-x-auto">
+                <table class="table table-striped">
+                    <thead>
+                        <tr class="text-center">
+                            <th scope="col" class="text-nowrap">No.</th>
+                            <th scope="col" class="text-nowrap">Kode Item</th>
+                            <th scope="col" class="text-nowrap">Nama Item</th>
+                            <th scope="col" class="text-nowrap">No. PP Manual</th>
+                            <th scope="col" class="text-nowrap">Kuantitas</th>
+                            <th scope="col" class="text-nowrap">Satuan (UoM)</th>
+                            <th scope="col" class="text-nowrap">Estimasi Harga</th>
+                            <th scope="col" class="text-nowrap">Total</th>
+                            <th scope="col" class="text-nowrap">Keterangan Alokasi</th>
+                            <th scope="col" class="text-nowrap">Status</th>
+
+                            @if (Auth::user()->role === 'Gudang Site')
+                                <th scope="col" class="text-nowrap">Opsi</th>
+                            @endif
+                        </tr>
+                    </thead>
+                    <tbody class="text-nowrap">
+                        @foreach ($permintaan_barang as $item)
+                            <tr>
+                                <th scope="row">{{ $loop->iteration }}</th>
+                                <td>{{ $item->itemCode->kode_item }}</td>
+                                <td>{{ $item->itemCode->nama_item }}</td>
+                                <td>{{ $item->no_pp_manual ?: '-' }}</td>
+                                <td>{{ $item->kuantitas }}</td>
+                                <td>{{ $item->uom ?: '-' }}</td>
+                                <td class="text-nowrap">
+                                    {{ 'Rp ' . number_format($item->estimasi_harga, '0', ',', '.') }}
+                                </td>
+                                <td class="text-nowrap">
+                                    {{ 'Rp ' . number_format($item->estimasi_harga * $item->kuantitas, '0', ',', '.') }}
+                                </td>
+                                <td>{{ $item->keterangan_alokasi }}</td>
+                                <td>Pembelian Lokal telah dikonfirmasi pada
+                                    {{ Carbon\Carbon::parse($item->waktu_konfirmasi_gudang_site)->format('j M Y, H:i') }}
+                                    oleh
+                                    <b>Gudang Site</b>.
+                                </td>
+
+                                @if (Auth::user()->role === 'Gudang Site')
+                                    <td>
+                                        <div class="d-flex gap-1">
+                                            <a href="{{ route('pembelian-lokal.edit', $item->slug) }}"
+                                                class="btn btn-warning" title="Edit">
+                                                <i class="ti ti-pencil"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-danger" title="Hapus"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#deletePermintaanBarang{{ $item->id }}Modal">
+                                                <i class="ti ti-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                @endif
+                            </tr>
+
+                            <!-- Modal -->
+                            <div class="modal fade" id="deletePermintaanBarang{{ $item->id }}Modal" tabindex="-1"
+                                aria-labelledby="deletePermintaanBarang{{ $item->id }}ModalLabel"
+                                aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h1 class="modal-title fs-5"
+                                                id="deletePermintaanBarang{{ $item->id }}ModalLabel">
+                                                Hapus Permintaan Barang ?
+                                            </h1>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body text-wrap">
+                                            Apakah Anda yakin ingin menghapus data
+                                            <b>{{ $item->itemCode->nama_item }} ({{ $item->itemCode->kode_item }})</b>
+                                            dari permintaan barang?
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-outline-primary"
+                                                data-bs-dismiss="modal">
+                                                <i class="ti ti-x"></i>&nbsp;Batal
+                                            </button>
+                                            <form action="{{ route('pembelian-lokal.destroy', $item->slug) }}"
+                                                method="post">
+                                                @method('delete')
+                                                @csrf
+                                                <button type="submit" class="btn btn-danger">
+                                                    <i class="ti ti-trash"></i>&nbsp;Hapus
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</x-app-layout>
